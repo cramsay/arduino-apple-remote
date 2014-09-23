@@ -1,0 +1,29 @@
+<html>
+<head>
+<!-- Latest compiled and minified CSS -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+<!-- Optional theme -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">
+<!-- Latest compiled and minified JavaScript -->
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+<script src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
+<title>Apple TV Control</title>
+</head>
+<body>
+
+	<div class="btn-group">
+		<div class="btn btn-default" href="/up">Up</div>
+		<div class="btn btn-default" href="/down">Down</div>
+		<div class="btn btn-default" href="/left">Left</div>
+		<div class="btn btn-default" href="/right">Right</div>
+	</div>
+	<script>
+		$(function(){
+			var url_prefix='http://192.168.0.69';
+			$('.btn').click(function(){
+				$.get(url_prefix+$(this).attr('href'));
+			});
+		})
+	</script>
+</body>
+</html>

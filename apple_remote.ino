@@ -1,6 +1,10 @@
+#include <SPI.h>
+#include <Ethernet.h>
 #include <IRremote.h>
 #include <IRremoteInt.h>
-IRsend irsend;
+
+//String buffer size
+#define BUFSIZE 256
 
 //Cmd codes
 #define CMD_BYT_UP 0x0B
@@ -18,36 +22,91 @@ IRsend irsend;
 #define CMD_KEY_CENTRE 'q'
 #define CMD_KEY_MENU 'e'
 
+//Ethernet connection
+byte mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED};
+IPAddress ip(192,168,0,69);
+EthernetServer server(80);
+
+//IR library object
+IRsend irsend;
+
 void setup()
 {
     Serial.begin(9600);
+
+    Ethernet.begin(mac, ip);
+    server.begin();
+
 }
 
 void loop() {
-    char cmd_char;
-    if ( -1 != (cmd_char=Serial.read()) ) {
-        switch(cmd_char) {
-        case CMD_KEY_UP:
-            send_cmd(CMD_BYT_UP);
-            break;
-        case CMD_KEY_DOWN:
-            send_cmd(CMD_BYT_DOWN);
-            break;
-        case CMD_KEY_LEFT:
-            send_cmd(CMD_BYT_LEFT);
-            break;
-        case CMD_KEY_RIGHT:
-            send_cmd(CMD_BYT_RIGHT);
-            break;
-        case CMD_KEY_CENTRE:
-            send_cmd(CMD_BYT_CENTRE);
-            break;
-        case CMD_KEY_MENU:
-            send_cmd(CMD_BYT_MENU);
-            break;
-        default:
-            break;
+
+    // listen for incoming clients
+    EthernetClient client = server.available();
+    if (client) {
+        Serial.println("new client");
+        char clientline[BUFSIZE];
+        int index = 0;
+
+        while (client.connected()) {
+
+            if (client.available()) {
+                char c = client.read();
+                Serial.write(c);
+
+                // fill url the buffer
+                if(c != '\n' && c != '\r' && index < BUFSIZE) {
+                    clientline[index++] = c;
+                    continue;
+                }
+				
+				//Only reaches here on a new line in the header
+				//Flush out the rest of the request
+                client.flush();
+
+				//Parse URL and run commands if matched
+				Serial.println(clientline);
+				String urlString = String(clientline);
+				if(urlString.startsWith("GET /menu")){
+					Serial.println("MENU presssed");
+					send_cmd(CMD_BYT_MENU);
+				}
+				else if(urlString.startsWith("GET /centre")){
+					Serial.println("CENTRE presssed");
+					send_cmd(CMD_BYT_CENTRE);
+				}
+				else if(urlString.startsWith("GET /up")){
+					Serial.println("UP presssed");
+					send_cmd(CMD_BYT_UP);
+				}
+				else if(urlString.startsWith("GET /down")){
+					Serial.println("DOWN presssed");
+					send_cmd(CMD_BYT_DOWN);
+				}
+				else if(urlString.startsWith("GET /left")){
+					Serial.println("LEFT presssed");
+					send_cmd(CMD_BYT_LEFT);
+				}
+				else if(urlString.startsWith("GET /right")){
+					Serial.println("RIGHT presssed");
+					send_cmd(CMD_BYT_RIGHT);
+				}
+
+                // send a standard http response header
+                client.println("HTTP/1.1 200 OK");
+                client.println("Content-Type: text/html");
+                client.println("Connection: close");  // the connection will be closed after completion of the response
+                client.println();
+                client.println("<!DOCTYPE HTML>");
+                client.println("<html><head></head><body>Thanks.</body></html>");
+                break;
+            }
         }
+        // give the web browser time to receive the data
+        delay(1);
+        // close the connection:
+        client.stop();
+        Serial.println("client disonnected");
     }
 }
 
