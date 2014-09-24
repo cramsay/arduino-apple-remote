@@ -24,7 +24,7 @@ By default the arduino will try to use the ip address 192.168.0.69. You can type
 into a web browser manually, or see the next section for a prototype web interface.
 
 Command | URL
------------------------------
+--------|--------------------
 Up      | 192.168.0.69/up
 Down    | 192.168.0.69/down
 Left    | 192.168.0.69/left
