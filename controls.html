@@ -7,16 +7,30 @@
 <!-- Latest compiled and minified JavaScript -->
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
 <script src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
+<style> .btn{width:100px;height:100px;} </style>
 <title>Apple TV Control</title>
 </head>
 <body>
 
-	<div class="btn-group">
-		<div class="btn btn-default" href="/up">Up</div>
-		<div class="btn btn-default" href="/down">Down</div>
-		<div class="btn btn-default" href="/left">Left</div>
-		<div class="btn btn-default" href="/right">Right</div>
-	</div>
+	<table class="btn-group btn-group-lg">
+		<tr>
+			<td></td>
+			<td><button class="btn btn-default" href="/up">Up</div></td>
+		</tr>
+		<tr>
+			<td><button class="btn btn-default" href="/left">Left</div></td>
+			<td><button class="btn btn-default" href="/centre">Centre</div></td>
+			<td><button class="btn btn-default" href="/right">Right</div></td>
+		</tr>
+		<tr>
+			<td></td>
+			<td><button class="btn btn-default" href="/down">Down</div></td>
+		</tr>
+		<tr>
+			<td></td>
+			<td><button class="btn btn-default" href="/menu">Menu</div></td>
+		</tr>
+	</table>
 	<script>
 		$(function(){
 			var url_prefix='http://192.168.0.69';
