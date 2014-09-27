@@ -4,7 +4,7 @@
 #include <avr/power.h>
 #include <avr/sleep.h>
 
-#define DEBUG 1
+//#define DEBUG 1
 
 //Cmd codes
 #define CMD_BYT_UP 0x0B
@@ -37,13 +37,18 @@ IRsend irsend;
 void setup()
 {	
 	Serial.begin(9600);
+
+	//Setup btn pins (input with internal pullup enabled)
 	for(int i=0;i<NUM_BTNS;i++){
 		pinMode(btns[i].pin,INPUT);
-		digitalWrite(btns[i].pin,HIGH);//This sets the internal pull-up resistor
+		digitalWrite(btns[i].pin,HIGH);
 	}
-	digitalWrite(2,HIGH); //Set internal pullup for wake btn
+
+	//Setup "awake" flag LED
 	pinMode(13,OUTPUT);
     digitalWrite(13,HIGH);
+
+	//Set an initial sleep time
 	SLEEP_POSTPONE;
 }
 
@@ -116,16 +121,16 @@ void check_btns(){
 
 void sleepNow(void)
 {
-    // Set pin 2 as interrupt and attach handler:
-    attachInterrupt(0, pinInterrupt, LOW);
 	#ifdef DEBUG
 		Serial.print("Sending to sleep");
 	#endif
     delay(100);
-    set_sleep_mode(SLEEP_MODE_PWR_DOWN);
-    sleep_enable();
     digitalWrite(13,LOW);   // turn LED off to indicate sleep
-    sleep_mode();
+    sleep_enable();
+    // Set pin 2 as interrupt and attach handler:
+    attachInterrupt(0, pinInterrupt, LOW);
+    set_sleep_mode(SLEEP_MODE_PWR_DOWN);
+    sleep_cpu();
     // Upon waking up, sketch continues from this point.
     sleep_disable();
 	#ifdef DEBUG
@@ -137,6 +142,10 @@ void sleepNow(void)
 void pinInterrupt(void)
 {
     detachInterrupt(0);
+    sleep_disable();
+	#ifdef DEBUG
+		Serial.print("In interrupt");
+	#endif
 }
 
 void loop() {
