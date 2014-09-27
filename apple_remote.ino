@@ -1,10 +1,10 @@
-#include <SPI.h>
-#include <Ethernet.h>
 #include <IRremote.h>
 #include <IRremoteInt.h>
+#include <avr/interrupt.h>
+#include <avr/power.h>
+#include <avr/sleep.h>
 
-//String buffer size
-#define BUFSIZE 256
+#define DEBUG 1
 
 //Cmd codes
 #define CMD_BYT_UP 0x0B
@@ -13,24 +13,49 @@
 #define CMD_BYT_RIGHT 0x07
 #define CMD_BYT_CENTRE 0x04
 #define CMD_BYT_MENU 0x02
+byte cmd_bytes[] = {CMD_BYT_UP,CMD_BYT_LEFT,CMD_BYT_RIGHT,CMD_BYT_DOWN,
+					CMD_BYT_CENTRE,CMD_BYT_MENU};
 
-//Ethernet connection
-byte mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED};
-IPAddress ip(192,168,0,69);
-EthernetServer server(80);
+//Sleep stuff
+#define SLEEP_POSTPONE_MS 1000
+#define SLEEP_POSTPONE sleep_time=millis()+SLEEP_POSTPONE_MS
+unsigned long sleep_time;
+
+//Button state
+typedef enum {off,debounce,on} btn_state_e;
+typedef struct
+{
+	btn_state_e state;
+	int pin;
+} btn_state_t;
+btn_state_t btns[] = {{off,7},{off,8},{off,9},{off,10},{off,11},{off,12}};
+#define NUM_BTNS sizeof(btns)/sizeof(btn_state_t)
 
 //IR library object
 IRsend irsend;
 
 void setup()
-{
-    Ethernet.begin(mac, ip);
-    server.begin();
+{	
+	Serial.begin(9600);
+	for(int i=0;i<NUM_BTNS;i++){
+		pinMode(btns[i].pin,INPUT);
+		digitalWrite(btns[i].pin,HIGH);//This sets the internal pull-up resistor
+	}
+	digitalWrite(2,HIGH); //Set internal pullup for wake btn
+	pinMode(13,OUTPUT);
+    digitalWrite(13,HIGH);
+	SLEEP_POSTPONE;
 }
 
 void send_cmd(byte cmd_code)
 {
     byte data[] = {0xEE,0x87,cmd_code,0x59};
+
+	#ifdef DEBUG
+		Serial.print("Sending cmd: ");
+		Serial.println(cmd_code,HEX);
+	#endif
+
     irsend.enableIROut(38);
 
 	//Send AGC leader
@@ -55,64 +80,70 @@ void send_cmd(byte cmd_code)
     irsend.space(0);
 }
 
+void clear_btn_state(){
+	for(int i=0;i<NUM_BTNS;i++){
+		btns[i].state=off;
+	}
+
+}
+
+void check_btns(){
+
+	//For each button
+	for(int i=0;i<NUM_BTNS;i++){
+		//If btn is pressed 
+		if(digitalRead(btns[i].pin)==0){
+
+			//Promote debouncing btns to pressed
+			if(btns[i].state==debounce){
+				btns[i].state=on;
+				//Send button command
+				send_cmd(cmd_bytes[i]);
+				SLEEP_POSTPONE;
+			}
+			//Promote off btns to "just pressed"
+			else if(btns[i].state==off)
+				btns[i].state=debounce;
+			
+
+		//Set to "not pressed"
+		}else{
+			btns[i].state=off;
+		}
+	}
+
+}
+
+void sleepNow(void)
+{
+    // Set pin 2 as interrupt and attach handler:
+    attachInterrupt(0, pinInterrupt, LOW);
+	#ifdef DEBUG
+		Serial.print("Sending to sleep");
+	#endif
+    delay(100);
+    set_sleep_mode(SLEEP_MODE_PWR_DOWN);
+    sleep_enable();
+    digitalWrite(13,LOW);   // turn LED off to indicate sleep
+    sleep_mode();
+    // Upon waking up, sketch continues from this point.
+    sleep_disable();
+	#ifdef DEBUG
+		Serial.print("Waking up");
+	#endif
+    digitalWrite(13,HIGH);   // turn LED on to indicate awake
+	SLEEP_POSTPONE;
+}
+void pinInterrupt(void)
+{
+    detachInterrupt(0);
+}
+
 void loop() {
-
-    // listen for incoming clients
-    EthernetClient client = server.available();
-    if (client) {
-
-        char clientline[BUFSIZE];
-        int index = 0;
-
-        while (client.connected()) {
-
-            if (client.available()) {
-                char c = client.read();
-
-                // fill url the buffer
-                if(c != '\n' && c != '\r' && index < BUFSIZE) {
-                    clientline[index++] = c;
-                    continue;
-                }
-				
-				//Only reaches here on a new line in the header
-				//Flush out the rest of the request
-                client.flush();
-
-				//Parse URL and run commands if matched
-				String urlString = String(clientline);
-				if(urlString.startsWith("GET /menu")){
-					send_cmd(CMD_BYT_MENU);
-				}
-				else if(urlString.startsWith("GET /centre")){
-					send_cmd(CMD_BYT_CENTRE);
-				}
-				else if(urlString.startsWith("GET /up")){
-					send_cmd(CMD_BYT_UP);
-				}
-				else if(urlString.startsWith("GET /down")){
-					send_cmd(CMD_BYT_DOWN);
-				}
-				else if(urlString.startsWith("GET /left")){
-					send_cmd(CMD_BYT_LEFT);
-				}
-				else if(urlString.startsWith("GET /right")){
-					send_cmd(CMD_BYT_RIGHT);
-				}
-
-                // send a standard http response header
-                client.println("HTTP/1.1 200 OK");
-                client.println("Content-Type: text/html");
-                client.println("Connection: close");  // the connection will be closed after completion of the response
-                client.println();
-                client.println("<!DOCTYPE HTML>");
-                client.println("<html><head></head><body>Thanks.</body></html>");
-                break;
-            }
-        }
-        // give the web browser time to receive the data
-        delay(1);
-        // close the connection:
-        client.stop();
-    }
+	if(millis()>=sleep_time){
+		sleepNow();
+		clear_btn_state();
+	}
+	check_btns();	
+	delay(10);
 }
