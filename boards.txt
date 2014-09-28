@@ -1,0 +1,20 @@
+##############################################################
+
+unolowbod.name=Arduino Uno With 1.8V BOD
+unolowbod.upload.protocol=arduino
+unolowbod.upload.maximum_size=32256
+unolowbod.upload.speed=115200
+unolowbod.bootloader.low_fuses=0xff
+unolowbod.bootloader.high_fuses=0xde
+unolowbod.bootloader.extended_fuses=0x06
+unolowbod.bootloader.path=optiboot
+unolowbod.bootloader.file=optiboot_atmega328.hex
+unolowbod.bootloader.unlock_bits=0x3F
+unolowbod.bootloader.lock_bits=0x0F
+unolowbod.build.mcu=atmega328p
+unolowbod.build.f_cpu=16000000L
+unolowbod.build.core=arduino
+unolowbod.build.variant=standard
+unolowbod.build.cppoption1=-fno-use-cxa-atexit
+
+##############################################################
