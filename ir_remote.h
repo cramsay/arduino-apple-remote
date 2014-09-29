@@ -1,5 +1,14 @@
+/**
+ * This is a stripped down version of Shirriff's Arduino-IRremote
+ * library (https://github.com/shirriff/Arduino-IRremote).
+ *
+ * There is an added NEC transmission function (send_ir_cmd)
+ * which will send a valid apple remote signal given a command byte.
+ * There is only support for transmitting IR signals.
+ */
 #include <Arduino.h>
 
+//System clock
 #ifdef F_CPU
 #define SYSCLOCK F_CPU     // main Arduino clock
 #else
@@ -14,8 +23,8 @@
 #define NEC_ZERO_SPACE	560
 #define NEC_RPT_SPACE	2250
 
-#define TIMER_PWM_PIN        3  /* Arduino Duemilanove, Diecimila, LilyPad, etc */
-
+// Timer macros
+#define TIMER_PWM_PIN        3
 #define TIMER_ENABLE_PWM     (TCCR2A |= _BV(COM2B1))
 #define TIMER_DISABLE_PWM    (TCCR2A &= ~(_BV(COM2B1)))
 #define TIMER_CONFIG_KHZ(val) ({ \
@@ -26,6 +35,7 @@
   OCR2B = pwmval / 3; \
 })
 
+//Function declarations
 void mark(int time);
 void space(int time);
 void enable_ir_out(int khz);
