@@ -5,8 +5,7 @@
  * @brief Replacement arduino based apple remote control
  */
 
-#include <IRremote.h>
-#include <IRremoteInt.h>
+#include "ir_remote.h"
 #include <avr/interrupt.h>
 #include <avr/power.h>
 #include <avr/sleep.h>
@@ -34,9 +33,6 @@ byte cmd_bytes[] = {CMD_BYT_UP,CMD_BYT_LEFT,CMD_BYT_RIGHT,
 //Sleep stuff
 //#define NO_SLEEP
 
-//IR library object
-IRsend irsend;
-
 /**
 Setup routine run once at power on
 
@@ -54,45 +50,6 @@ void setup()
         pinMode(btns[i].pin,INPUT);
         digitalWrite(btns[i].pin,HIGH);
     }
-}
-
-/**
-Sends a single IR NEC command
-
-It uses the Arduino-IRremote library to do the clever PWM stuff.
-Builds the whole payload (apple uid : cmd : remote id) and then
-sends the bytes in order, but least significant bit first.
-See https://en.wikipedia.org/wiki/Apple_Remote#Technical_details
-for details on the cmd codes and parity bit.
-
-@param cmd_code the command code to be sent
-*/
-void send_cmd(byte cmd_code)
-{
-    byte data[] = {0xEE,0x87,cmd_code,0x59};
-
-    irsend.enableIROut(38);
-
-    //Send AGC leader
-    irsend.mark(NEC_HDR_MARK);
-    irsend.space(NEC_HDR_SPACE);
-
-    //Send each byte in order, but least sig bit first
-    for (int i = 0; i < sizeof(data)/sizeof(byte); i++) {
-        for(int j=0; j<8; j++) {
-            if (data[i] & 1) {
-                irsend.mark(NEC_BIT_MARK);
-                irsend.space(NEC_ONE_SPACE);
-            }
-            else {
-                irsend.mark(NEC_BIT_MARK);
-                irsend.space(NEC_ZERO_SPACE);
-            }
-            data[i] >>= 1;
-        }
-    }
-    irsend.mark(NEC_BIT_MARK);
-    irsend.space(0);
 }
 
 /**
@@ -122,7 +79,7 @@ void check_btns() {
             if(btns[i].state==debounce) {
                 btns[i].state=on;
                 //Send button command
-                send_cmd(cmd_bytes[i]);
+                send_ir_cmd(cmd_bytes[i]);
             }
             //Promote off btns to "just pressed"
             else if(btns[i].state==off)
