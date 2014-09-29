@@ -1,3 +1,10 @@
+/**
+ * @file apple_remote.ino
+ * @author Craig Ramsay
+ * @date 29 Sep 2014
+ * @brief Replacement arduino based apple remote control
+ */
+
 #include <IRremote.h>
 #include <IRremoteInt.h>
 #include <avr/interrupt.h>
