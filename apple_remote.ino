@@ -142,10 +142,11 @@ void pinInterrupt(void)
 }
 
 void loop() {
-	if(millis()>=sleep_time){
+	if(digitalRead(2)){
 		sleepNow();
 		clear_btn_state();
 	}
 	check_btns();	
-	delay(10);
+	delay(25);
+	check_btns();	
 }
