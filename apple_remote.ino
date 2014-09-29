@@ -106,12 +106,15 @@ void sleepNow(void)
 
     // Allow sleeping (disabled on interrupt)
     sleep_enable();
+    set_sleep_mode(SLEEP_MODE_PWR_DOWN);
 
     // Set pin 2 as interrupt and attach handler:
     attachInterrupt(0, pinInterrupt, LOW);
 
+	// Disable brown out detection when sleeping
+	sleep_bod_disable();
+
     // Sleep
-    set_sleep_mode(SLEEP_MODE_PWR_DOWN);
     sleep_cpu();
 
     // Code continutes from here once woken up
