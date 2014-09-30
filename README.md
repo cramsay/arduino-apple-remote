@@ -34,7 +34,7 @@ The interrupt signal is all of the button signals ANDed together using a 4082 IC
 ## Brown Out Detection (BOD)
 
 I'm running the MCU on a 3V coin cell battery and by default the arduino bootloader sets fuse
-bits to have a 2.7 V limit. Because of this, I ran into brown out issues as the battery discharged.
+bits to have a 2.7 V BOD limit. Because of this, I ran into brown out issues as the battery discharged.
 To combat this, I made a custom entry in my boards.txt file with the fuse bits for a 1.8 V BOD limit.
 
 
@@ -42,7 +42,7 @@ To combat this, I made a custom entry in my boards.txt file with the fuse bits f
 
 There are a few components on the arduino uno board which inevitably draw a fair bit of current.
 Because of this, I moved my design to a minimal atmega328 circuit powered by batteries with _no_
-voltage regulator. Further power saving was gained by disabling I2C, SPI, ADC, and USART0 via the 
+voltage regulator. Further power savings were gained by disabling I2C, SPI, ADC, and USART0 via the 
 power reduction register (PRR) in the setup function. Also you can disable BOD during sleep using the
 `sleep_bod_disable()` function. Here are a few measurements I took along the way...
 
