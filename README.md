@@ -46,9 +46,9 @@ voltage regulator. Further power savings were gained by disabling I2C, SPI, ADC,
 power reduction register (PRR) in the setup function. Also you can disable BOD during sleep using the
 `sleep_bod_disable()` function. Here are a few measurements I took along the way...
 
-Description | Sleep | Active
------------|---------|--------
-Arduino Uno (5V) | 26.2 mA | 43.0 mA
-Atmega328 (5V) | 0.29 mA | 12.55 mA
-/wo I2C, SPI, ADC, and USART0 | 17 uA | 6.5 mA
-with BOD disabled during sleep | 0.1 uA | 6.5 mA
+Description                    | Sleep   | Active
+-------------------------------|---------|--------
+Arduino Uno (5V)               | 26.2 mA | 43.0 mA
+Atmega328 (5V)                 | 0.29 mA | 12.55 mA
+/wo I2C, SPI, ADC, and USART0  | 17 uA   | 6.5 mA
+with BOD disabled during sleep | 0.1 uA  | 6.5 mA
